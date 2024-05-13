@@ -1,24 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 01.05.2024 12:57:24
-// Design Name: 
-// Module Name: processor
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-// proc
 
 module processor(
   input clk,
@@ -28,9 +8,9 @@ module processor(
   logic [4:0] inst_p;
   logic [7:0] acc, d_out;
   logic [2:0] inst_COP;
-  logic [4:0] inst_ADDR; // адрес следующей инструкции
+  logic [4:0] inst_ADDR; 
 
-  // ----------------------- Micro Control Unit -----------------------
+  // Micro Control Unit 
   enum logic [3:0] {inst_addr = 4'b0000,
             inst_read = 4'b0001,
             decode    = 4'b0010,
@@ -52,14 +32,13 @@ module processor(
   parameter ht = 3'b101;
 
   always @(posedge clk or posedge reset) begin
-    // state переключается только здесь.
     if (reset) 
       state <= inst_addr;
     else 
       case (state)
         inst_addr : state <= inst_read; 
-        inst_read : state <= decode; // получили inst_COP.
-        decode    : case (inst_COP) // декодируем inst_COP.
+        inst_read : state <= decode; 
+        decode    : case (inst_COP) 
                    ad: state <= add_read;
                    dc: state <= decrement;
                    ld: state <= load_read;
@@ -79,22 +58,22 @@ module processor(
   end
 
                  
-  // ----------------------- Instruction Pointer -----------------------
+  // Instruction Pointer 
   always @(posedge clk or posedge reset) begin
     if (reset)
-      inst_p <= 5'b00000; // начинаем с нулевой строки?
+      inst_p <= 5'b00000; 
     else if (state == branch)
-      if (acc != 0) // ветвимся. // has been inverted
+      if (acc != 0) 
         inst_p <= inst_ADDR;
-      else // переходим к следующей операции.
+      else 
         inst_p <= inst_p + 1;
     else if ((state == load) | (state == store) | (state == add) | (state == decrement))
-      inst_p <= inst_p + 1; // после выполнения перечисленных операций inst_p указывает на следующую строчку (переходим к следующей строке памяти).
+      inst_p <= inst_p + 1; 
   end
 
 
 
-  // --------------- Accumulator + Arithmetic Logic Unit ---------------
+  // Accumulator + Arithmetic Logic Unit 
   always @(posedge clk or posedge reset) begin
     if (reset)
       acc <= 5'b00000;
@@ -107,20 +86,20 @@ module processor(
   end
 
 
-  // ---------------------- Instruction Register ----------------------
+  // Instruction Register 
   always @(posedge clk or posedge reset) begin
     if (reset) begin
       inst_ADDR <= 5'b00000;
       inst_COP <= 3'b000;
     end
     else if (state == inst_read) begin
-      inst_ADDR <= d_out[4:0]; // 5 младших хранят значение
-      inst_COP <= d_out[7:5]; // 3 старшие хранят код операции
+      inst_ADDR <= d_out[4:0]; 
+      inst_COP <= d_out[7:5]; 
     end
   end
 
 
-  // ----------------------------- Memory -----------------------------
+  // Memory
   logic [7:0] ram [31:0];
   initial $readmemb("memory.mem", ram, 0, 31);
 
